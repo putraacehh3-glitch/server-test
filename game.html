@@ -1,3 +1,4 @@
+cat > game.html << 'EOF'
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -15,24 +16,34 @@
         justify-content: center;
         height: 100vh;
         margin: 0;
+        text-align: center;
     }
     canvas {
         border: 2px solid #00ff00;
         box-shadow: 0 0 20px #00ff00;
         background: #000;
+        max-width: 90vw;
+        max-height: 70vh;
+        display: none;
     }
-    #startBtn {
-        margin-top: 20px;
-        padding: 10px 30px;
+    #menu {
+        display: block;
+    }
+    #gameArea {
+        display: none;
+    }
+    button {
+        margin: 8px;
+        padding: 12px 30px;
         background: transparent;
         border: 2px solid #00ff00;
         color: #00ff00;
         font-family: 'Courier New', monospace;
-        font-size: 18px;
+        font-size: 16px;
         cursor: pointer;
-        text-shadow: 0 0 10px #00ff00;
+        border-radius: 5px;
     }
-    #startBtn:hover {
+    button:hover {
         background: #00ff00;
         color: #000;
     }
@@ -41,56 +52,80 @@
         display: none;
     }
     #controls button {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         margin: 5px;
         background: #111;
-        border: 1px solid #00ff00;
+        border: 2px solid #00ff00;
         color: #00ff00;
-        font-size: 20px;
+        font-size: 24px;
+        border-radius: 10px;
     }
 </style>
 </head>
 <body>
-<h2>Snake Game</h2>
-<canvas id="game" width="400" height="400"></canvas>
-<p id="info">Tekan tombol Mulai buat main</p>
-<button id="startBtn">Mulai</button>
+<div id="menu">
+    <h2>Snake Game</h2>
+    <p>Pilih Kecepatan:</p>
+    <button onclick="startGame(180)">Santai</button>
+    <button onclick="startGame(120)">Normal</button>
+    <button onclick="startGame(80)">Cepat</button>
+</div>
 
-<div id="controls">
-    <div>
-        <button onclick="setDir('UP')">▲</button>
+<div id="gameArea">
+    <canvas id="game" width="360" height="640"></canvas>
+    <p id="info">Skor: 0</p>
+    <div id="controls">
+        <div>
+            <button onclick="setDir('UP')">▲</button>
+        </div>
+        <div>
+            <button onclick="setDir('LEFT')">◄</button>
+            <button onclick="setDir('DOWN')">▼</button>
+            <button onclick="setDir('RIGHT')">►</button>
+        </div>
     </div>
-    <div>
-        <button onclick="setDir('LEFT')">◄</button>
-        <button onclick="setDir('DOWN')">▼</button>
-        <button onclick="setDir('RIGHT')">►</button>
-    </div>
+    <button onclick="resetGame()">Menu</button>
 </div>
 
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const box = 20;
-let snake, dir, food, score, game, started = false;
+const cols = canvas.width / box;
+const rows = canvas.height / box;
+let snake, dir, food, score, game, speed;
 
-function init() {
-    snake = [{x: 200, y: 200}];
-    dir = 'RIGHT';
-    food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
+function startGame(selectedSpeed) {
+    speed = selectedSpeed;
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('gameArea').style.display = 'block';
+    document.getElementById('controls').style.display = 'block';
+    canvas.style.display = 'block';
+
+    snake = [{x: Math.floor(cols/2)*box, y: Math.floor(rows/2)*box}];
+    dir = 'UP';
+    food = spawnFood();
     score = 0;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, 400, 400);
-    draw();
+    document.getElementById('info').textContent = 'Skor: 0';
+
+    if(game) clearInterval(game);
+    game = setInterval(draw, speed);
 }
 
-function startGame() {
-    if(started) return;
-    started = true;
-    document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('controls').style.display = 'block';
-    document.getElementById('info').textContent = 'Skor: 0';
-    game = setInterval(draw, 150);
+function resetGame() {
+    clearInterval(game);
+    document.getElementById('menu').style.display = 'block';
+    document.getElementById('gameArea').style.display = 'none';
+    document.getElementById('controls').style.display = 'none';
+    canvas.style.display = 'none';
+}
+
+function spawnFood() {
+    return {
+        x: Math.floor(Math.random()*cols)*box,
+        y: Math.floor(Math.random()*rows)*box
+    };
 }
 
 function setDir(newDir) {
@@ -100,10 +135,7 @@ function setDir(newDir) {
     if(newDir==='DOWN' && dir!=='UP') dir=newDir;
 }
 
-document.getElementById('startBtn').onclick = startGame;
-
 document.addEventListener('keydown', e => {
-    if(!started) startGame();
     if(e.key === 'ArrowLeft' || e.key === 'a') setDir('LEFT');
     if(e.key === 'ArrowUp' || e.key === 'w') setDir('UP');
     if(e.key === 'ArrowRight' || e.key === 'd') setDir('RIGHT');
@@ -112,7 +144,7 @@ document.addEventListener('keydown', e => {
 
 function draw() {
     ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, 400, 400);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for(let i=0; i<snake.length; i++) {
         ctx.fillStyle = i===0? '#00ff00' : '#008800';
@@ -133,21 +165,17 @@ function draw() {
     if(headX===food.x && headY===food.y) {
         score++;
         document.getElementById('info').textContent = 'Skor: '+score;
-        food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
+        food = spawnFood();
     } else {
         snake.pop();
     }
 
     let newHead = {x: headX, y: headY};
 
-    if(headX<0 || headX>=400 || headY<0 || headY>=400 || collision(newHead, snake)) {
+    if(headX<0 || headX>=canvas.width || headY<0 || headY>=canvas.height || collision(newHead, snake)) {
         clearInterval(game);
         alert('Game Over! Skor: '+score);
-        started = false;
-        document.getElementById('startBtn').style.display = 'block';
-        document.getElementById('controls').style.display = 'none';
-        document.getElementById('info').textContent = 'Tekan tombol Mulai buat main lagi';
-        init();
+        resetGame();
         return;
     }
 
@@ -160,8 +188,7 @@ function collision(head, array) {
     }
     return false;
 }
-
-init();
 </script>
 </body>
 </html>
+EOF
