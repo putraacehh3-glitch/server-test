@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Snake Game</title>
 <style>
     body {
@@ -20,30 +21,93 @@
         box-shadow: 0 0 20px #00ff00;
         background: #000;
     }
-    p {
+    #startBtn {
+        margin-top: 20px;
+        padding: 10px 30px;
+        background: transparent;
+        border: 2px solid #00ff00;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        cursor: pointer;
+        text-shadow: 0 0 10px #00ff00;
+    }
+    #startBtn:hover {
+        background: #00ff00;
+        color: #000;
+    }
+    #controls {
         margin-top: 15px;
+        display: none;
+    }
+    #controls button {
+        width: 50px;
+        height: 50px;
+        margin: 5px;
+        background: #111;
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        font-size: 20px;
     }
 </style>
 </head>
 <body>
 <h2>Snake Game</h2>
 <canvas id="game" width="400" height="400"></canvas>
-<p>Pakai tombol W A S D atau panah buat gerak</p>
+<p id="info">Tekan tombol Mulai buat main</p>
+<button id="startBtn">Mulai</button>
+
+<div id="controls">
+    <div>
+        <button onclick="setDir('UP')">▲</button>
+    </div>
+    <div>
+        <button onclick="setDir('LEFT')">◄</button>
+        <button onclick="setDir('DOWN')">▼</button>
+        <button onclick="setDir('RIGHT')">►</button>
+    </div>
+</div>
 
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const box = 20;
-let snake = [{x: 200, y: 200}];
-let dir = 'RIGHT';
-let food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
-let score = 0;
+let snake, dir, food, score, game, started = false;
+
+function init() {
+    snake = [{x: 200, y: 200}];
+    dir = 'RIGHT';
+    food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
+    score = 0;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 400, 400);
+    draw();
+}
+
+function startGame() {
+    if(started) return;
+    started = true;
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('controls').style.display = 'block';
+    document.getElementById('info').textContent = 'Skor: 0';
+    game = setInterval(draw, 150);
+}
+
+function setDir(newDir) {
+    if(newDir==='LEFT' && dir!=='RIGHT') dir=newDir;
+    if(newDir==='RIGHT' && dir!=='LEFT') dir=newDir;
+    if(newDir==='UP' && dir!=='DOWN') dir=newDir;
+    if(newDir==='DOWN' && dir!=='UP') dir=newDir;
+}
+
+document.getElementById('startBtn').onclick = startGame;
 
 document.addEventListener('keydown', e => {
-    if(e.key === 'ArrowLeft' || e.key === 'a') dir = 'LEFT';
-    if(e.key === 'ArrowUp' || e.key === 'w') dir = 'UP';
-    if(e.key === 'ArrowRight' || e.key === 'd') dir = 'RIGHT';
-    if(e.key === 'ArrowDown' || e.key === 's') dir = 'DOWN';
+    if(!started) startGame();
+    if(e.key === 'ArrowLeft' || e.key === 'a') setDir('LEFT');
+    if(e.key === 'ArrowUp' || e.key === 'w') setDir('UP');
+    if(e.key === 'ArrowRight' || e.key === 'd') setDir('RIGHT');
+    if(e.key === 'ArrowDown' || e.key === 's') setDir('DOWN');
 });
 
 function draw() {
@@ -68,6 +132,7 @@ function draw() {
 
     if(headX===food.x && headY===food.y) {
         score++;
+        document.getElementById('info').textContent = 'Skor: '+score;
         food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
     } else {
         snake.pop();
@@ -78,13 +143,15 @@ function draw() {
     if(headX<0 || headX>=400 || headY<0 || headY>=400 || collision(newHead, snake)) {
         clearInterval(game);
         alert('Game Over! Skor: '+score);
-        location.reload();
+        started = false;
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('controls').style.display = 'none';
+        document.getElementById('info').textContent = 'Tekan tombol Mulai buat main lagi';
+        init();
+        return;
     }
 
     snake.unshift(newHead);
-    ctx.fillStyle = '#00ff00';
-    ctx.font = '20px Courier New';
-    ctx.fillText('Skor: '+score, 10, 25);
 }
 
 function collision(head, array) {
@@ -94,7 +161,7 @@ function collision(head, array) {
     return false;
 }
 
-let game = setInterval(draw, 100);
+init();
 </script>
 </body>
 </html>
