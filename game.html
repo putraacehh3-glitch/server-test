@@ -4,7 +4,7 @@ cat > game.html << 'EOF'
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game 🐍</title>
+<title>Snake Game 2 Player 🐍</title>
 <style>
     body {
         background: #0a0a0a;
@@ -46,39 +46,51 @@ cat > game.html << 'EOF'
     #controls {
         margin-top: 15px;
         display: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
     }
     #controls button {
         width: 60px;
         height: 60px;
-        margin: 5px;
         background: #111;
         border: 2px solid #00ff00;
         color: #00ff00;
         font-size: 24px;
         border-radius: 10px;
     }
+    #pauseBtn {
+        background: #ffaa00!important;
+        border-color: #ffaa00!important;
+        color: #000!important;
+    }
+    #info {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        max-width: 360px;
+    }
 </style>
 </head>
 <body>
 <div id="menu">
-    <h2>Snake Game 🐍</h2>
+    <h2>Snake Game 2 Player 🐍</h2>
     <p>Mode: Tembus Tembok ON</p>
-    <p>Pilih Kecepatan:</p>
-    <button onclick="startGame(180)">Santai</button>
-    <button onclick="startGame(120)">Normal</button>
-    <button onclick="startGame(80)">Cepat</button>
+    <button onclick="startGame(1, 120)">1 Player</button>
+    <button onclick="startGame(2, 120)">2 Player</button>
 </div>
 
 <div id="gameArea">
     <canvas id="game" width="360" height="640"></canvas>
-    <p id="info">Skor: 0</p>
+    <div id="info">
+        <p id="score1">P1: 0</p>
+        <p id="score2" style="display:none;">P2: 0</p>
+    </div>
     <div id="controls">
-        <div><button onclick="setDir('UP')">▲</button></div>
-        <div>
-            <button onclick="setDir('LEFT')">◄</button>
-            <button onclick="setDir('DOWN')">▼</button>
-            <button onclick="setDir('RIGHT')">►</button>
-        </div>
+        <button onclick="setDir(1, 'LEFT')">◄</button>
+        <button id="pauseBtn" onclick="togglePause()">⏸</button>
+        <button onclick="setDir(2, 'RIGHT')">►</button>
     </div>
     <button onclick="resetGame()">Menu</button>
 </div>
@@ -89,11 +101,11 @@ const ctx = canvas.getContext('2d');
 const box = 20;
 const cols = canvas.width / box;
 const rows = canvas.height / box;
-let snake, dir, food, score, game, speed;
-let audioCtx;
-let audioEnabled = false;
 
-// Audio setup - aktifin pas user pencet tombol
+let players = [], food, game, speed, mode, paused = false;
+let audioCtx, audioEnabled = false;
+
+// Audio
 function enableAudio() {
     if(!audioEnabled) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -127,18 +139,49 @@ function playGameOverSound() {
     osc.stop(audioCtx.currentTime + 0.4);
 }
 
-function startGame(selectedSpeed) {
+function startGame(playerCount, selectedSpeed) {
+    mode = playerCount;
     speed = selectedSpeed;
     document.getElementById('menu').style.display = 'none';
     document.getElementById('gameArea').style.display = 'block';
-    document.getElementById('controls').style.display = 'block';
+    document.getElementById('controls').style.display = 'flex';
     canvas.style.display = 'block';
 
-    snake = [{x: Math.floor(cols/2)*box, y: Math.floor(rows/2)*box}];
-    dir = 'UP';
+    players = [];
+    if(mode === 1) {
+        players.push({
+            snake: [{x: Math.floor(cols/2)*box, y: Math.floor(rows/2)*box}],
+            dir: 'UP',
+            score: 0,
+            color: '#ffff00',
+            bodyColor: '#00ff00',
+            alive: true
+        });
+        document.getElementById('score2').style.display = 'none';
+    } else {
+        players.push({
+            snake: [{x: 4*box, y: Math.floor(rows/2)*box}],
+            dir: 'RIGHT',
+            score: 0,
+            color: '#ffff00',
+            bodyColor: '#00ff00',
+            alive: true
+        });
+        players.push({
+            snake: [{x: (cols-5)*box, y: Math.floor(rows/2)*box}],
+            dir: 'LEFT',
+            score: 0,
+            color: '#ff00ff',
+            bodyColor: '#ff66ff',
+            alive: true
+        });
+        document.getElementById('score2').style.display = 'block';
+    }
+
     food = spawnFood();
-    score = 0;
-    document.getElementById('info').textContent = 'Skor: 0';
+    updateScore();
+    paused = false;
+    document.getElementById('pauseBtn').textContent = '⏸';
 
     if(game) clearInterval(game);
     game = setInterval(draw, speed);
@@ -152,96 +195,141 @@ function resetGame() {
     canvas.style.display = 'none';
 }
 
-function spawnFood() {
-    return {
-        x: Math.floor(Math.random()*cols)*box,
-        y: Math.floor(Math.random()*rows)*box
-    };
+function togglePause() {
+    paused =!paused;
+    document.getElementById('pauseBtn').textContent = paused? '▶' : '⏸';
 }
 
-function setDir(newDir) {
-    enableAudio(); // Aktifin audio pas pencet tombol
-    if(newDir==='LEFT' && dir!=='RIGHT') dir=newDir;
-    if(newDir==='RIGHT' && dir!=='LEFT') dir=newDir;
-    if(newDir==='UP' && dir!=='DOWN') dir=newDir;
-    if(newDir==='DOWN' && dir!=='UP') dir=newDir;
+function spawnFood() {
+    let f;
+    do {
+        f = {
+            x: Math.floor(Math.random()*cols)*box,
+            y: Math.floor(Math.random()*rows)*box
+        };
+    } while(players.some(p => p.snake.some(s => s.x===f.x && s.y===f.y)));
+    return f;
+}
+
+function setDir(playerNum, newDir) {
+    enableAudio();
+    let p = players[playerNum-1];
+    if(!p ||!p.alive) return;
+    if(newDir==='LEFT' && p.dir!=='RIGHT') p.dir=newDir;
+    if(newDir==='RIGHT' && p.dir!=='LEFT') p.dir=newDir;
+    if(newDir==='UP' && p.dir!=='DOWN') p.dir=newDir;
+    if(newDir==='DOWN' && p.dir!=='UP') p.dir=newDir;
+}
+
+function updateScore() {
+    document.getElementById('score1').textContent = 'P1: ' + players[0].score;
+    if(mode === 2) {
+        document.getElementById('score2').textContent = 'P2: ' + players[1].score;
+    }
+}
+
+function draw() {
+    if(paused) return;
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw food
+    ctx.font = '20px serif';
+    ctx.fillText('🍎', food.x, food.y + 18);
+
+    // Move and draw players
+    players.forEach((p, idx) => {
+        if(!p.alive) return;
+
+        // Move head
+        let head = {...p.snake[0]};
+        if(p.dir==='LEFT') head.x -= box;
+        if(p.dir==='RIGHT') head.x += box;
+        if(p.dir==='UP') head.y -= box;
+        if(p.dir==='DOWN') head.y += box;
+
+        // Wrap walls
+        if(head.x < 0) head.x = canvas.width - box;
+        else if(head.x >= canvas.width) head.x = 0;
+        if(head.y < 0) head.y = canvas.height - box;
+        else if(head.y >= canvas.height) head.y = 0;
+
+        // Check food
+        if(head.x===food.x && head.y===food.y) {
+            p.score++;
+            playEatSound();
+            updateScore();
+            food = spawnFood();
+        } else {
+            p.snake.pop();
+        }
+
+        // Check collision with self and others
+        for(let i=0; i<p.snake.length; i++) {
+            if(head.x===p.snake[i].x && head.y===p.snake[i].y) {
+                p.alive = false;
+                playGameOverSound();
+                break;
+            }
+        }
+        players.forEach((other, j) => {
+            if(idx!== j && other.alive) {
+                other.snake.forEach(s => {
+                    if(head.x===s.x && head.y===s.y) {
+                        p.alive = false;
+                        playGameOverSound();
+                    }
+                });
+            }
+        });
+
+        if(p.alive) {
+            p.snake.unshift(head);
+        }
+
+        // Draw snake
+        p.snake.forEach((s, i) => {
+            if(i === 0) {
+                ctx.fillStyle = p.color;
+                ctx.fillRect(s.x, s.y, box, box);
+                ctx.strokeStyle = '#ffaa00';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(s.x, s.y, box, box);
+            } else {
+                ctx.fillStyle = p.bodyColor;
+                ctx.fillRect(s.x, s.y, box, box);
+                ctx.strokeStyle = '#008800';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(s.x, s.y, box, box);
+            }
+        });
+    });
+
+    // Check game over
+    let aliveCount = players.filter(p => p.alive).length;
+    if(aliveCount === 0) {
+        playGameOverSound();
+        clearInterval(game);
+        setTimeout(() => {
+            alert(mode===1? `Game Over! Skor: ${players[0].score}` : `Game Over!\nP1: ${players[0].score}\nP2: ${players[1].score}`);
+            resetGame();
+        }, 300);
+    }
 }
 
 document.addEventListener('keydown', e => {
     enableAudio();
-    if(e.key === 'ArrowLeft' || e.key === 'a') setDir('LEFT');
-    if(e.key === 'ArrowUp' || e.key === 'w') setDir('UP');
-    if(e.key === 'ArrowRight' || e.key === 'd') setDir('RIGHT');
-    if(e.key === 'ArrowDown' || e.key === 's') setDir('DOWN');
+    if(e.key === 'ArrowLeft') setDir(1, 'LEFT');
+    if(e.key === 'ArrowRight') setDir(1, 'RIGHT');
+    if(e.key === 'ArrowUp') setDir(1, 'UP');
+    if(e.key === 'ArrowDown') setDir(1, 'DOWN');
+    if(e.key === 'a' || e.key === 'A') setDir(2, 'LEFT');
+    if(e.key === 'd' || e.key === 'D') setDir(2, 'RIGHT');
+    if(e.key === 'w' || e.key === 'W') setDir(2, 'UP');
+    if(e.key === 's' || e.key === 'S') setDir(2, 'DOWN');
+    if(e.key === ' ') togglePause();
 });
-
-function draw() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    for(let i=0; i<snake.length; i++) {
-        if(i === 0) {
-            ctx.fillStyle = '#ffff00';
-            ctx.fillRect(snake[i].x, snake[i].y, box, box);
-            ctx.strokeStyle = '#ffaa00';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(snake[i].x, snake[i].y, box, box);
-        } else {
-            ctx.fillStyle = '#00ff00';
-            ctx.fillRect(snake[i].x, snake[i].y, box, box);
-            ctx.strokeStyle = '#008800';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(snake[i].x, snake[i].y, box, box);
-            ctx.fillStyle = '#004400';
-            ctx.beginPath();
-            ctx.arc(snake[i].x + box/2, snake[i].y + box/2, 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    ctx.font = '20px serif';
-    ctx.fillText('🍎', food.x, food.y + 18);
-
-    let headX = snake[0].x;
-    let headY = snake[0].y;
-
-    if(dir==='LEFT') headX -= box;
-    if(dir==='RIGHT') headX += box;
-    if(dir==='UP') headY -= box;
-    if(dir==='DOWN') headY += box;
-
-    // Tembus tembok - FIXED
-    if(headX < 0) headX = canvas.width - box;
-    else if(headX >= canvas.width) headX = 0;
-    if(headY < 0) headY = canvas.height - box;
-    else if(headY >= canvas.height) headY = 0;
-
-    if(headX===food.x && headY===food.y) {
-        score++;
-        playEatSound();
-        document.getElementById('info').textContent = 'Skor: '+score;
-        food = spawnFood();
-    } else {
-        snake.pop();
-    }
-
-    let newHead = {x: headX, y: headY};
-
-    // Cek tabrakan diri sendiri
-    for(let i=0; i<snake.length; i++) {
-        if(newHead.x===snake[i].x && newHead.y===snake[i].y) {
-            playGameOverSound();
-            clearInterval(game);
-            setTimeout(() => {
-                alert('Game Over! Skor: '+score);
-                resetGame();
-            }, 300);
-            return;
-        }
-    }
-
-    snake.unshift(newHead);
-}
 </script>
 </body>
 </html>
