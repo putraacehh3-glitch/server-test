@@ -17,17 +17,18 @@ cat > game.html << 'EOF'
         height: 100vh;
         margin: 0;
         text-align: center;
+        overflow: hidden;
     }
     canvas {
         border: 2px solid #00ff00;
         box-shadow: 0 0 20px #00ff00;
         background: #000;
         max-width: 90vw;
-        max-height: 70vh;
+        max-height: 60vh;
         display: none;
     }
     #menu { display: block; }
-    #gameArea { display: none; }
+    #gameArea { display: none; width: 100%; }
     button {
         margin: 8px;
         padding: 12px 30px;
@@ -44,32 +45,56 @@ cat > game.html << 'EOF'
         color: #000;
     }
     #controls {
-        margin-top: 15px;
+        margin-top: 10px;
         display: none;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 400px;
+        padding: 0 10px;
     }
-    #controls button {
+   .dpad {
+        display: grid;
+        grid-template-columns: 60px 60px 60px;
+        grid-template-rows: 60px 60px 60px;
+        gap: 5px;
+    }
+   .dpad button {
         width: 60px;
         height: 60px;
+        margin: 0;
         background: #111;
         border: 2px solid #00ff00;
         color: #00ff00;
-        font-size: 24px;
+        font-size: 28px;
         border-radius: 10px;
+        padding: 0;
+    }
+   .dpad button:active {
+        background: #00ff00;
+        color: #000;
+    }
+    #p1pad button { border-color: #00ff00; color: #00ff00; }
+    #p2pad button { border-color: #ff00ff; color: #ff00ff; }
+    #p2pad button:active { background: #ff00ff; color: #000; }
+    #centerControls {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
     }
     #pauseBtn {
-        background: #ffaa00!important;
-        border-color: #ffaa00!important;
-        color: #000!important;
+        background: #ffaa00;
+        border-color: #ffaa00;
+        color: #000;
+        padding: 10px 20px;
+        font-size: 20px;
     }
     #info {
         display: flex;
         justify-content: space-around;
         width: 100%;
         max-width: 360px;
+        margin: 5px 0;
     }
 </style>
 </head>
@@ -88,9 +113,25 @@ cat > game.html << 'EOF'
         <p id="score2" style="display:none;">P2: 0</p>
     </div>
     <div id="controls">
-        <button onclick="setDir(1, 'LEFT')">◄</button>
-        <button id="pauseBtn" onclick="togglePause()">⏸</button>
-        <button onclick="setDir(2, 'RIGHT')">►</button>
+        <div class="dpad" id="p1pad">
+            <div></div><button onclick="setDir(1, 'UP')">▲</button><div></div>
+            <button onclick="setDir(1, 'LEFT')">◄</button>
+            <button onclick="togglePause()">⏸</button>
+            <button onclick="setDir(1, 'RIGHT')">►</button>
+            <div></div><button onclick="setDir(1, 'DOWN')">▼</button><div></div>
+        </div>
+
+        <div id="centerControls">
+            <button id="pauseBtn" onclick="togglePause()">⏸</button>
+        </div>
+
+        <div class="dpad" id="p2pad" style="display:none;">
+            <div></div><button onclick="setDir(2, 'UP')">▲</button><div></div>
+            <button onclick="setDir(2, 'LEFT')">◄</button>
+            <div></div>
+            <button onclick="setDir(2, 'RIGHT')">►</button>
+            <div></div><button onclick="setDir(2, 'DOWN')">▼</button><div></div>
+        </div>
     </div>
     <button onclick="resetGame()">Menu</button>
 </div>
@@ -105,7 +146,6 @@ const rows = canvas.height / box;
 let players = [], food, game, speed, mode, paused = false;
 let audioCtx, audioEnabled = false;
 
-// Audio
 function enableAudio() {
     if(!audioEnabled) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -140,6 +180,7 @@ function playGameOverSound() {
 }
 
 function startGame(playerCount, selectedSpeed) {
+    enableAudio();
     mode = playerCount;
     speed = selectedSpeed;
     document.getElementById('menu').style.display = 'none';
@@ -158,6 +199,7 @@ function startGame(playerCount, selectedSpeed) {
             alive: true
         });
         document.getElementById('score2').style.display = 'none';
+        document.getElementById('p2pad').style.display = 'none';
     } else {
         players.push({
             snake: [{x: 4*box, y: Math.floor(rows/2)*box}],
@@ -176,6 +218,7 @@ function startGame(playerCount, selectedSpeed) {
             alive: true
         });
         document.getElementById('score2').style.display = 'block';
+        document.getElementById('p2pad').style.display = 'grid';
     }
 
     food = spawnFood();
@@ -234,28 +277,23 @@ function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw food
     ctx.font = '20px serif';
     ctx.fillText('🍎', food.x, food.y + 18);
 
-    // Move and draw players
     players.forEach((p, idx) => {
         if(!p.alive) return;
 
-        // Move head
         let head = {...p.snake[0]};
         if(p.dir==='LEFT') head.x -= box;
         if(p.dir==='RIGHT') head.x += box;
         if(p.dir==='UP') head.y -= box;
         if(p.dir==='DOWN') head.y += box;
 
-        // Wrap walls
         if(head.x < 0) head.x = canvas.width - box;
         else if(head.x >= canvas.width) head.x = 0;
         if(head.y < 0) head.y = canvas.height - box;
         else if(head.y >= canvas.height) head.y = 0;
 
-        // Check food
         if(head.x===food.x && head.y===food.y) {
             p.score++;
             playEatSound();
@@ -265,7 +303,6 @@ function draw() {
             p.snake.pop();
         }
 
-        // Check collision with self and others
         for(let i=0; i<p.snake.length; i++) {
             if(head.x===p.snake[i].x && head.y===p.snake[i].y) {
                 p.alive = false;
@@ -288,7 +325,6 @@ function draw() {
             p.snake.unshift(head);
         }
 
-        // Draw snake
         p.snake.forEach((s, i) => {
             if(i === 0) {
                 ctx.fillStyle = p.color;
@@ -306,7 +342,6 @@ function draw() {
         });
     });
 
-    // Check game over
     let aliveCount = players.filter(p => p.alive).length;
     if(aliveCount === 0) {
         playGameOverSound();
@@ -317,19 +352,6 @@ function draw() {
         }, 300);
     }
 }
-
-document.addEventListener('keydown', e => {
-    enableAudio();
-    if(e.key === 'ArrowLeft') setDir(1, 'LEFT');
-    if(e.key === 'ArrowRight') setDir(1, 'RIGHT');
-    if(e.key === 'ArrowUp') setDir(1, 'UP');
-    if(e.key === 'ArrowDown') setDir(1, 'DOWN');
-    if(e.key === 'a' || e.key === 'A') setDir(2, 'LEFT');
-    if(e.key === 'd' || e.key === 'D') setDir(2, 'RIGHT');
-    if(e.key === 'w' || e.key === 'W') setDir(2, 'UP');
-    if(e.key === 's' || e.key === 'S') setDir(2, 'DOWN');
-    if(e.key === ' ') togglePause();
-});
 </script>
 </body>
 </html>
