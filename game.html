@@ -91,44 +91,43 @@ const cols = canvas.width / box;
 const rows = canvas.height / box;
 let snake, dir, food, score, game, speed;
 let audioCtx;
+let audioEnabled = false;
 
-// Audio setup
-function initAudio() {
-    if(!audioCtx) {
+// Audio setup - aktifin pas user pencet tombol
+function enableAudio() {
+    if(!audioEnabled) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioEnabled = true;
     }
 }
 
 function playEatSound() {
-    if(!audioCtx) return;
+    if(!audioEnabled) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    osc.frequency.value = 800;
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
     osc.start();
-    osc.stop(audioCtx.currentTime + 0.1);
+    osc.stop(audioCtx.currentTime + 0.15);
 }
 
 function playGameOverSound() {
-    if(!audioCtx) return;
+    if(!audioEnabled) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    osc.frequency.value = 200;
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
     osc.start();
-    osc.stop(audioCtx.currentTime + 0.5);
+    osc.stop(audioCtx.currentTime + 0.4);
 }
 
 function startGame(selectedSpeed) {
-    initAudio();
     speed = selectedSpeed;
     document.getElementById('menu').style.display = 'none';
     document.getElementById('gameArea').style.display = 'block';
@@ -161,6 +160,7 @@ function spawnFood() {
 }
 
 function setDir(newDir) {
+    enableAudio(); // Aktifin audio pas pencet tombol
     if(newDir==='LEFT' && dir!=='RIGHT') dir=newDir;
     if(newDir==='RIGHT' && dir!=='LEFT') dir=newDir;
     if(newDir==='UP' && dir!=='DOWN') dir=newDir;
@@ -168,6 +168,7 @@ function setDir(newDir) {
 }
 
 document.addEventListener('keydown', e => {
+    enableAudio();
     if(e.key === 'ArrowLeft' || e.key === 'a') setDir('LEFT');
     if(e.key === 'ArrowUp' || e.key === 'w') setDir('UP');
     if(e.key === 'ArrowRight' || e.key === 'd') setDir('RIGHT');
@@ -209,11 +210,11 @@ function draw() {
     if(dir==='UP') headY -= box;
     if(dir==='DOWN') headY += box;
 
-    // Tembus tembok: kalau keluar layar, muncul di sisi seberang
+    // Tembus tembok - FIXED
     if(headX < 0) headX = canvas.width - box;
-    if(headX >= canvas.width) headX = 0;
+    else if(headX >= canvas.width) headX = 0;
     if(headY < 0) headY = canvas.height - box;
-    if(headY >= canvas.height) headY = 0;
+    else if(headY >= canvas.height) headY = 0;
 
     if(headX===food.x && headY===food.y) {
         score++;
@@ -226,25 +227,20 @@ function draw() {
 
     let newHead = {x: headX, y: headY};
 
-    // Cek tabrakan diri sendiri aja, tembok udah tembus
-    if(collision(newHead, snake)) {
-        playGameOverSound();
-        setTimeout(() => {
-            alert('Game Over! Skor: '+score);
-            resetGame();
-        }, 200);
-        clearInterval(game);
-        return;
+    // Cek tabrakan diri sendiri
+    for(let i=0; i<snake.length; i++) {
+        if(newHead.x===snake[i].x && newHead.y===snake[i].y) {
+            playGameOverSound();
+            clearInterval(game);
+            setTimeout(() => {
+                alert('Game Over! Skor: '+score);
+                resetGame();
+            }, 300);
+            return;
+        }
     }
 
     snake.unshift(newHead);
-}
-
-function collision(head, array) {
-    for(let i=0; i<array.length; i++) {
-        if(head.x===array[i].x && head.y===array[i].y) return true;
-    }
-    return false;
 }
 </script>
 </body>
