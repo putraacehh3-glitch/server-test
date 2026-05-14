@@ -1,128 +1,135 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Tentang BENI DEV</title>
-<style>
-body {
-  background:#0a0a0a;
-  color:#fff;
-  font-family:Arial, sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
-  margin:0;
-  padding:20px;
-}
-.box {
-  background:#1a1a1a;
-  padding:40px;
-  border-radius:10px;
-  border:2px solid #ff0000;
-  box-shadow:0 0 20px #ff0000;
-  max-width:600px;
-  text-align:center;
-}
-h1, h3 {
-  color:#ff0000;
-  margin-bottom:15px;
-}
-p {
-  line-height:1.6;
-  margin-bottom:15px;
-  text-align:left;
-}
-a {
-  color:#ff0000;
-  text-decoration:none;
-  font-weight:bold;
-}
-a:hover {
-  text-decoration:underline;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[root@beni-dev]~# about</title>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    
+    body {
+        background: #000;
+        color: #00ff00;
+        font-family: 'Share Tech Mono', monospace;
+        padding: 40px 20px;
+        margin: 0;
+        line-height: 1.6;
+    }
+    
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: repeating-linear-gradient(
+            0deg,
+            rgba(0, 255, 0, 0.03),
+            rgba(0, 255, 0, 0.03) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+        pointer-events: none;
+    }
+    
+    h1, h2 {
+        color: #00ff00;
+        text-shadow: 0 0 10px #00ff00;
+        border-bottom: 1px solid #00ff00;
+        padding-bottom: 5px;
+    }
+    
+    h1::before {
+        content: "$ ";
+        color: #00ff00;
+    }
+    
+    h2::before {
+        content: "# ";
+        color: #00ff00;
+    }
+    
+    a {
+        color: #00ffff;
+        text-decoration: none;
+        text-shadow: 0 0 5px #00ffff;
+    }
+    
+    a:hover {
+        color: #fff;
+        text-shadow: 0 0 10px #00ffff;
+    }
+    
+    ul {
+        list-style: none;
+        padding-left: 0;
+    }
+    
+    ul li::before {
+        content: "> ";
+        color: #00ff00;
+    }
+    
+    b {
+        color: #fff;
+        text-shadow: 0 0 5px #00ff00;
+    }
+    
+    hr {
+        border: none;
+        border-top: 1px dashed #00ff00;
+        margin: 30px 0;
+    }
+    
+    .terminal {
+        max-width: 700px;
+        margin: 0 auto;
+        border: 1px solid #00ff00;
+        padding: 20px;
+        box-shadow: 0 0 20px #00ff00;
+        background: rgba(0, 20, 0, 0.3);
+    }
+    
+    @keyframes glitch {
+        0% { text-shadow: 2px 0 red, -2px 0 blue; }
+        50% { text-shadow: -2px 0 red, 2px 0 blue; }
+        100% { text-shadow: 2px 0 red, -2px 0 blue; }
+    }
+    
+    h1:hover {
+        animation: glitch 0.3s infinite;
+    }
+    </style>
 </head>
 <body>
-<div class="box">
-  <h1>Tentang BENI DEV</h1>
-  
-  <p>
-    <b>BENI DEV</b> adalah website pertama gue yang dibikin 100% pakai HP + Termux. 
-    Gak pake laptop, gak pake PC mahal. Cuma modal HP Android dan niat belajar.
-  </p>
 
-  <h3>Tujuan Website Ini:</h3>
-  <p>
-    1. Nunjukin kalau bikin website itu bisa dimulai dari HP aja.<br>
-    2. Bagi-bagi tutorial step by step buat pemula yang mau belajar coding.<br>
-    3. Ngumpulin orang-orang yang pengen belajar bareng dari nol.
-  </p>
+<div class="terminal">
+<h1>Tentang BENI DEV</h1> 
 
-  <p>
-    Website ini masih tahap belajar dan bakal terus gue update.  
-    Kalau lu juga lagi belajar, gas bareng di sini. 
-    Ada saran atau mau nanya? Langsung ke halaman <a href="kontak.html">Kontak</a>.
-  </p>
+<p>> initializing user: <b>Beni</b>...</p>
+<p>> status: [ACTIVE]</p>
+<p>> location: Termux on Android 📱</p>
 
-<hr style="border:1px solid #ff0000; margin:30px 0;">
+<p>Gue cuma anak biasa yang penasaran sama coding. 
+Modal HP tua, Termux, sama kuota 2GB, gue mulai belajar bikin website dari nol. 
+Gak ada laptop mahal, gak ada kursus mahal. Cuma niat + YouTube + ngulik sendiri.</p> 
 
-<h1>Tutorial Pertama</h1>
-<h3>Bikin Heading & Paragraf di HTML</h3>
+<p>> mission: Buktiin kalau <b>siapa aja bisa ngoding dari HP</b>. 
+Kalau gue bisa, lu juga pasti bisa bro.</p> 
 
-<p>
-Di HTML, buat bikin judul gede pakai tag <b>&lt;h1&gt;</b> sampai <b>&lt;h6&gt;</b>.  
-Buat nulis teks biasa pakai tag <b>&lt;p&gt;</b>.
-</p>
+<hr> 
 
-<h3>Contoh Kodenya:</h3>
-<div style="background:#0a0a0a; padding:15px; border-radius:5px; text-align:left; font-family:monospace; border:1px solid #333;">
-&lt;h1&gt;Ini Judul Besar&lt;/h1&gt;<br>
-&lt;p&gt;Ini paragraf biasa. Gue bisa nulis apa aja di sini.&lt;/p&gt;
+<h2>Kenapa Gue Bikin Ini?</h2> 
+<ul> 
+  <li>log file: biar gak lupa apa yang udah gue pelajari</li> 
+  <li>share knowledge: bagi tutorial buat yang kayak gue dulu, bingung mulai dari mana</li> 
+  <li>networking: cari temen ngoding. Sendirian ngulik itu sepi coy</li> 
+</ul> 
+
+<p>> contact: 
+<a href="kontak.html">./kontak.html</a> 
+// Lu punya saran, mau nanya, atau mau kolab? Gue bales kok.</p>
+
 </div>
 
-<h3>Hasilnya di Browser:</h3>
-<h1 style="color:#fff; font-size:28px; margin:10px 0;">Ini Judul Besar</h1>
-<p style="color:#fff;">Ini paragraf biasa. Gue bisa nulis apa aja di sini.</p>
-
-<p>
-Gampang kan? Coba lu buka Termux, bikin file baru `coba.html`, terus paste kode di atas.  
-Jalankan pakai `php -S localhost:8080` terus buka di browser.
-</p>  
-  <a href="index.html">← Balik ke Home</a>
-<hr style="border:1px solid #ff0000; margin:30px 0;">
-
-<h1>Tutorial Kedua</h1>
-<h3>Bikin Tombol & Link di HTML</h3>
-
-<p>
-Buat bikin link pakai tag <b>&lt;a&gt;</b>.  
-Buat bikin tombol yang keliatan keren, kita bikin link tapi dikasih style CSS biar kayak tombol.
-</p>
-
-<h3>Contoh Kodenya:</h3>
-<div style="background:#0a0a0a; padding:15px; border-radius:5px; text-align:left; font-family:monospace; border:1px solid #333;">
-&lt;a href="https://google.com"&gt;Ini Link Biasa&lt;/a&gt;<br><br>
-&lt;a href="kontak.html" class="tombol"&gt;Ini Tombol&lt;/a&gt;<br><br>
-&lt;style&gt;<br>
-.tombol {<br>
-&nbsp;&nbsp;background:#ff0000;<br>
-&nbsp;&nbsp;color:#fff;<br>
-&nbsp;&nbsp;padding:10px 20px;<br>
-&nbsp;&nbsp;border-radius:5px;<br>
-&nbsp;&nbsp;text-decoration:none;<br>
-&nbsp;&nbsp;display:inline-block;<br>
-}<br>
-&lt;/style&gt;
-</div>
-
-<h3>Hasilnya di Browser:</h3>
-<a href="#" style="color:#ff0000;">Ini Link Biasa</a><br><br>
-<a href="#" style="background:#ff0000; color:#fff; padding:10px 20px; border-radius:5px; text-decoration:none; display:inline-block;">Ini Tombol</a>
-
-<p>
-Tag <b>href</b> itu buat ngatur mau ke mana linknya. Kalau mau link ke file lain di folder yang sama, tinggal tulis nama filenya aja kayak <b>kontak.html</b>.
-</p>
-</div>
 </body>
 </html>
