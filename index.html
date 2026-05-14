@@ -100,14 +100,14 @@
         51%, 100% { opacity: 0; }
     }
     
+    h1:hover {
+        animation: glitch 0.3s infinite;
+    }
+    
     @keyframes glitch {
         0% { text-shadow: 2px 0 red, -2px 0 blue; }
         50% { text-shadow: -2px 0 red, 2px 0 blue; }
         100% { text-shadow: 2px 0 red, -2px 0 blue; }
-    }
-    
-    h1:hover {
-        animation: glitch 0.3s infinite;
     }
     </style>
 </head>
@@ -119,7 +119,7 @@
     <p>> user: Beni</p>
     <p>> status: [ONLINE]</p>
     <p>> running: ngoding dari HP + Termux</p>
-    <p>> ketik <b>./masuk</b> untuk lanjut<span class="cursor"></span></p>
+    <p>> ketik <a href="about.html" style="color:#00ffff; text-decoration:none; text-shadow:0 0 5px #00ffff;">./masuk</a> untuk lanjut<span class="cursor"></span></p>
 
     <a href="about.html" class="button">./about</a>
     <a href="kontak.html" class="button">./kontak</a>
