@@ -44,8 +44,8 @@
         border-radius: 5px;
         max-width: 700px;
 	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
+	flex-direction: column;
+	gap: 8px; jadi gap: 15px;
 	justify-content: center; 
 	align-items: center; 
 	margin: 50px auto;
@@ -122,16 +122,14 @@
 <body>
 
 <div class="terminal-box">
-    <h1>SELAMAT DATANG</h1>
-
-    <p>> user: Beni</p>
-    <p>> status: [ONLINE]</p>
-    <p>> running: ngoding dari HP + Termux</p>
-
-    <a href="about.html" class="button">./about</a>
-    <a href="kontak.html" class="button">./kontak</a>	
-    <a href="tutorial.html" class="button">./tutorial</a>
+    <p>[root@beni-dev]-# SELAMAT DATANG ...</p>
+    <p>> running: ngoding dari HP + Termux > ketik ./masuk untuk lanjut</p>
+    
+    <div>
+        <a href="about.html" class="button">./about</a>
+        <a href="kontak.html" class="button">./kontak</a>
+        <a href="tutorial.html" class="button">./tutorial</a>
+    </div>
 </div>
-
 </body>
 </html>
