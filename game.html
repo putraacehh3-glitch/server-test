@@ -90,10 +90,6 @@ const cols = canvas.width / box;
 const rows = canvas.height / box;
 let snake, dir, food, score, game, speed;
 
-// Gambar ular yang lu upload
-const snakeImg = new Image();
-snakeImg.src = 'attachment://1002180639419420';
-
 function startGame(selectedSpeed) {
     speed = selectedSpeed;
     document.getElementById('menu').style.display = 'none';
@@ -146,16 +142,17 @@ function draw() {
 
     for(let i=0; i<snake.length; i++) {
         if(i === 0) {
-            // Gambar kepala ular pakai gambar yang lu upload
-            ctx.drawImage(snakeImg, snake[i].x, snake[i].y, box, box);
+            // Kepala ular kuning biar kontras
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(snake[i].x, snake[i].y, box, box);
         } else {
-            // Badan pakai hijau terang biar keliatan
+            // Badan ular hijau terang
             ctx.fillStyle = '#00ff00';
             ctx.fillRect(snake[i].x, snake[i].y, box, box);
         }
     }
 
-    // Makanan pakai emoji apel
+    // Umpan apel merah
     ctx.font = '20px serif';
     ctx.fillText('🍎', food.x, food.y + 18);
 
