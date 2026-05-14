@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Snake Game</title>
+<style>
+    body {
+        background: #0a0a0a;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+    }
+    canvas {
+        border: 2px solid #00ff00;
+        box-shadow: 0 0 20px #00ff00;
+        background: #000;
+    }
+    p {
+        margin-top: 15px;
+    }
+</style>
+</head>
+<body>
+<h2>Snake Game</h2>
+<canvas id="game" width="400" height="400"></canvas>
+<p>Pakai tombol W A S D atau panah buat gerak</p>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const box = 20;
+let snake = [{x: 200, y: 200}];
+let dir = 'RIGHT';
+let food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
+let score = 0;
+
+document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowLeft' || e.key === 'a') dir = 'LEFT';
+    if(e.key === 'ArrowUp' || e.key === 'w') dir = 'UP';
+    if(e.key === 'ArrowRight' || e.key === 'd') dir = 'RIGHT';
+    if(e.key === 'ArrowDown' || e.key === 's') dir = 'DOWN';
+});
+
+function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 400, 400);
+
+    for(let i=0; i<snake.length; i++) {
+        ctx.fillStyle = i===0? '#00ff00' : '#008800';
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+    }
+
+    ctx.fillStyle = 'red';
+    ctx.fillRect(food.x, food.y, box, box);
+
+    let headX = snake[0].x;
+    let headY = snake[0].y;
+
+    if(dir==='LEFT') headX -= box;
+    if(dir==='RIGHT') headX += box;
+    if(dir==='UP') headY -= box;
+    if(dir==='DOWN') headY += box;
+
+    if(headX===food.x && headY===food.y) {
+        score++;
+        food = {x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box};
+    } else {
+        snake.pop();
+    }
+
+    let newHead = {x: headX, y: headY};
+
+    if(headX<0 || headX>=400 || headY<0 || headY>=400 || collision(newHead, snake)) {
+        clearInterval(game);
+        alert('Game Over! Skor: '+score);
+        location.reload();
+    }
+
+    snake.unshift(newHead);
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '20px Courier New';
+    ctx.fillText('Skor: '+score, 10, 25);
+}
+
+function collision(head, array) {
+    for(let i=0; i<array.length; i++) {
+        if(head.x===array[i].x && head.y===array[i].y) return true;
+    }
+    return false;
+}
+
+let game = setInterval(draw, 100);
+</script>
+</body>
+</html>
