@@ -142,13 +142,24 @@ function draw() {
 
     for(let i=0; i<snake.length; i++) {
         if(i === 0) {
-            // Kepala ular kuning biar kontras
+            // Kepala ular kuning
             ctx.fillStyle = '#ffff00';
             ctx.fillRect(snake[i].x, snake[i].y, box, box);
+            ctx.strokeStyle = '#ffaa00';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(snake[i].x, snake[i].y, box, box);
         } else {
-            // Badan ular hijau terang
+            // Badan ular hijau dengan outline dan titik tengah
             ctx.fillStyle = '#00ff00';
             ctx.fillRect(snake[i].x, snake[i].y, box, box);
+            ctx.strokeStyle = '#008800';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            // Titik tengah biar keliatan kayak ruas
+            ctx.fillStyle = '#004400';
+            ctx.beginPath();
+            ctx.arc(snake[i].x + box/2, snake[i].y + box/2, 3, 0, Math.PI * 2);
+            ctx.fill();
         }
     }
 
