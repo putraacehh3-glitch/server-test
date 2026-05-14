@@ -1,81 +1,129 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Beni Dev</title>
-<style>
-    * {
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[root@beni-dev]~# home</title>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    
+    body {
+        background: #000;
+        color: #00ff00;
+        font-family: 'Share Tech Mono', monospace;
+        text-align: center;
         margin: 0;
         padding: 0;
-        box-sizing: border-box;
-        font-family: 'Impact', 'Arial Black', sans-serif;
-    }
-    body {
-        background: #0a0a0a;
-        background-image: 
-            linear-gradient(45deg, #1a0000 25%, transparent 25%),
-            linear-gradient(-45deg, #1a0000 25%, transparent 25%);
-        background-size: 40px 40px;
-        color: #fff;
-        min-height: 100vh;
         display: flex;
-        flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding: 20px;
+        min-height: 100vh;
+        overflow: hidden;
     }
-    .container {
-        background: rgba(20, 20, 20, 0.9);
-        border: 2px solid #ff0000;
-        padding: 40px;
-        border-radius: 0px;
-        text-align: center;
-        max-width: 500px;
-        box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+    
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: repeating-linear-gradient(
+            0deg,
+            rgba(0, 255, 0, 0.03),
+            rgba(0, 255, 0, 0.03) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+        pointer-events: none;
     }
+    
+    .terminal-box {
+        background: rgba(0, 20, 0, 0.3);
+        border: 2px solid #00ff00;
+        box-shadow: 0 0 20px #00ff00;
+        padding: 40px 30px;
+        border-radius: 5px;
+        max-width: 400px;
+    }
+    
     h1 {
-        font-size: 48px;
-        margin-bottom: 15px;
-        color: #ff0000;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        text-shadow: 3px 3px 0px #000, 6px 6px 0px rgba(255,0,0,0.5);
+        color: #00ff00;
+        text-shadow: 0 0 15px #00ff00;
+        font-size: 28px;
+        margin: 0 0 20px 0;
     }
+    
+    h1::before {
+        content: "[root@beni-dev]~# ";
+        font-size: 18px;
+        color: #00ff00;
+    }
+    
     p {
-        font-size: 18px;
-        line-height: 1.6;
-        margin-bottom: 25px;
-        color: #ccc;
+        font-size: 16px;
+        line-height: 1.5;
+        margin: 15px 0;
     }
-    .btn {
-        background: #ff0000;
-        color: #fff;
-        padding: 14px 35px;
-        border: 2px solid #ff0000;
-        border-radius: 0px;
-        font-size: 18px;
+    
+    a.button {
+        background: transparent;
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        padding: 12px 25px;
+        margin: 8px;
+        border-radius: 0;
         font-weight: bold;
-        text-transform: uppercase;
         cursor: pointer;
-        transition: 0.2s;
+        text-decoration: none;
+        display: inline-block;
+        transition: 0.2s ease;
+        box-shadow: 0 0 10px #00ff00;
+        font-family: 'Share Tech Mono', monospace;
     }
-    .btn:hover {
-        background: #000;
-        color: #ff0000;
-        box-shadow: 0 0 20px #ff0000;
-        transform: translateY(-3px);
+    
+    a.button:hover {
+        background: #00ff00;
+        color: #000;
+        box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+        transform: scale(1.05);
     }
-</style>
+    
+    .cursor {
+        display: inline-block;
+        width: 10px;
+        height: 18px;
+        background: #00ff00;
+        animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+    }
+    
+    @keyframes glitch {
+        0% { text-shadow: 2px 0 red, -2px 0 blue; }
+        50% { text-shadow: -2px 0 red, 2px 0 blue; }
+        100% { text-shadow: 2px 0 red, -2px 0 blue; }
+    }
+    
+    h1:hover {
+        animation: glitch 0.3s infinite;
+    }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h1>Selamat Datang di Beni Dev</h1>
-    <p>Website pertama gue, dibikin 100% pakai HP + Termux</p>
-       <a href="about.html" class="btn">Masuk</a>
-<div style="margin-top:30px; text-align:center;">
-<a href="kontak.html" style="background:#ff0000;color:#fff;padding:12px 25px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;">Kontak</a>
+
+<div class="terminal-box">
+    <h1>SELAMAT DATANG</h1>
+
+    <p>> user: Beni</p>
+    <p>> status: [ONLINE]</p>
+    <p>> running: ngoding dari HP + Termux</p>
+    <p>> ketik <b>./masuk</b> untuk lanjut<span class="cursor"></span></p>
+
+    <a href="about.html" class="button">./about</a>
+    <a href="kontak.html" class="button">./kontak</a>
 </div>
-</div>
+
 </body>
 </html>
