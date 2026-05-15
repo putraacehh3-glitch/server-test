@@ -78,16 +78,6 @@ cat > game.html << 'EOF'
         padding: 8px 15px;
         font-size: 18px;
     }
-    #musicBtn {
-        background: #333;
-        border-color: #555;
-        color: #fff;
-        padding: 5px 10px;
-        font-size: 14px;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-    }
     #info {
         display: flex;
         justify-content: space-around;
@@ -103,6 +93,16 @@ cat > game.html << 'EOF'
         background: #ffaa00;
         color: #000;
     }
+ .sound-btn {
+        border-color: #5555ff;
+        color: #5555ff;
+        font-size: 14px;
+        padding: 5px 15px;
+    }
+ .sound-btn.active {
+        background: #5555ff;
+        color: #fff;
+    }
     @media (max-height: 700px) {
    .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
    .dpad button { width: 55px; height: 55px; font-size: 22px; }
@@ -111,15 +111,19 @@ cat > game.html << 'EOF'
 </style>
 </head>
 <body>
-<button id="musicBtn" onclick="toggleMusic()">🎵 ON</button>
-
 <div id="menu">
     <h2>Snake Game 🐍</h2>
+
     <p>Pilih Level:</p>
     <button class="level-btn active" id="lvl1btn" onclick="selectLevel(1)">Level 1 - Tembus Tembok</button>
     <button class="level-btn" id="lvl2btn" onclick="selectLevel(2)">Level 2 - Ada Tembok</button>
     <button class="level-btn" id="lvl3btn" onclick="selectLevel(3)">Level 3 - 2 Apel</button>
+
     <br>
+    <p>Musik:</p>
+    <button class="sound-btn" id="soundBtn" onclick="toggleMusic()">🔇 OFF</button>
+
+    <br><br>
     <p>Pilih Kecepatan:</p>
     <button onclick="startGame(180)">Santai</button>
     <button onclick="startGame(120)">Normal</button>
@@ -152,11 +156,23 @@ const cols = canvas.width / box;
 const rows = canvas.height / box;
 
 let snake, dir, foods, score, game, speed, level = 1, paused = false;
-let audioCtx, audioEnabled = false, musicPlaying = false, musicOsc = [];
-
-// Musik latar sederhana 8-bit
-const musicNotes = [262, 294, 330, 349, 392, 440, 494, 523]; // C4 to C5
+let audioCtx, audioEnabled = false, musicPlaying = false;
+const musicNotes = [262, 294, 330, 349, 392, 440, 494, 523];
 let noteIndex = 0;
+
+function selectLevel(lvl) {
+    level = lvl;
+    document.getElementById('lvl1btn').classList.remove('active');
+    document.getElementById('lvl2btn').classList.remove('active');
+    document.getElementById('lvl3btn').classList.remove('active');
+    document.getElementById('lvl' + lvl + 'btn').classList.add('active');
+}
+
+function toggleMusic() {
+    musicPlaying =!musicPlaying;
+    document.getElementById('soundBtn').classList.toggle('active');
+    document.getElementById('soundBtn').textContent = musicPlaying? '🎵 ON' : '🔇 OFF';
+}
 
 function enableAudio() {
     if(!audioEnabled) {
@@ -165,37 +181,18 @@ function enableAudio() {
     }
 }
 
-function playBackgroundMusic() {
-    if(!audioEnabled ||!musicPlaying) return;
-
+function playNote() {
+    if(!audioEnabled ||!musicPlaying || paused) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-
     osc.frequency.value = musicNotes[noteIndex];
-    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-
+    gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
     osc.start();
-    osc.stop(audioCtx.currentTime + 0.3);
-
+    osc.stop(audioCtx.currentTime + 0.25);
     noteIndex = (noteIndex + 1) % musicNotes.length;
-
-    setTimeout(() => {
-        if(musicPlaying &&!paused) playBackgroundMusic();
-    }, 300);
-}
-
-function toggleMusic() {
-    enableAudio();
-    musicPlaying =!musicPlaying;
-    document.getElementById('musicBtn').textContent = musicPlaying? '🎵 ON' : '🔇 OFF';
-
-    if(musicPlaying &&!paused) {
-        noteIndex = 0;
-        playBackgroundMusic();
-    }
 }
 
 function playEatSound() {
@@ -224,14 +221,6 @@ function playGameOverSound() {
     osc.stop(audioCtx.currentTime + 0.4);
 }
 
-function selectLevel(lvl) {
-    level = lvl;
-    document.getElementById('lvl1btn').classList.remove('active');
-    document.getElementById('lvl2btn').classList.remove('active');
-    document.getElementById('lvl3btn').classList.remove('active');
-    document.getElementById('lvl' + lvl + 'btn').classList.add('active');
-}
-
 function startGame(selectedSpeed) {
     enableAudio();
     speed = selectedSpeed;
@@ -242,26 +231,23 @@ function startGame(selectedSpeed) {
 
     snake = [{x: Math.floor(cols/2)*box, y: Math.floor(rows/2)*box}];
     dir = 'UP';
-    foods = level === 3? [spawnFood(), spawnFood()] : [spawnFood()];
+    foods = [];
+    foods.push(spawnFood());
+    if(level === 3) foods.push(spawnFood());
+
     score = 0;
     document.getElementById('score').textContent = 'Skor: 0';
     document.getElementById('levelInfo').textContent = 'Level ' + level;
     paused = false;
     document.getElementById('pauseBtn').textContent = '⏸';
+    noteIndex = 0;
 
     if(game) clearInterval(game);
     game = setInterval(draw, speed);
-
-    if(musicPlaying) {
-        noteIndex = 0;
-        playBackgroundMusic();
-    }
 }
 
 function resetGame() {
     clearInterval(game);
-    musicPlaying = false;
-    document.getElementById('musicBtn').textContent = '🔇 OFF';
     document.getElementById('menu').style.display = 'block';
     document.getElementById('gameArea').style.display = 'none';
     document.getElementById('controls').style.display = 'none';
@@ -271,24 +257,20 @@ function resetGame() {
 function togglePause() {
     paused =!paused;
     document.getElementById('pauseBtn').textContent = paused? '▶' : '⏸';
-
-    if(paused && musicPlaying) {
-        musicPlaying = false;
-    } else if(!paused && document.getElementById('musicBtn').textContent === '🎵 ON') {
-        musicPlaying = true;
-        playBackgroundMusic();
-    }
 }
 
 function spawnFood() {
     let f;
+    let attempts = 0;
     do {
         f = {
-            x: Math.floor(Math.random()*cols)*box,
-            y: Math.floor(Math.random()*rows)*box
+            x: Math.floor(Math.random()*(cols-2)+1)*box,
+            y: Math.floor(Math.random()*(rows-2)+1)*box
         };
-    } while(snake.some(s => s.x===f.x && s.y===f.y) ||
-            foods.some(f2 => f2.x===f.x && f2.y===f.y));
+        attempts++;
+    } while((snake && snake.some(s => s.x===f.x && s.y===f.y)) ||
+            (foods && foods.some(f2 => f2.x===f.x && f2.y===f.y)) ||
+            attempts > 100);
     return f;
 }
 
@@ -359,24 +341,25 @@ function draw() {
     }
 
     let ateFood = false;
-    foods = foods.filter(f => {
-        if(headX===f.x && headY===f.y) {
+    for(let i=0; i<foods.length; i++) {
+        if(headX===foods[i].x && headY===foods[i].y) {
             score++;
             playEatSound();
             ateFood = true;
-            return false;
+            foods.splice(i, 1);
+            break;
         }
-        return true;
-    });
+    }
 
-    if(foods.length === 0) {
-        foods.push(spawnFood());
-        if(level === 3) foods.push(spawnFood());
+    if(!ateFood) snake.pop();
+    else {
+        if(foods.length === 0) {
+            foods.push(spawnFood());
+            if(level === 3) foods.push(spawnFood());
+        }
     }
 
     document.getElementById('score').textContent = 'Skor: ' + score;
-
-    if(!ateFood) snake.pop();
 
     let newHead = {x: headX, y: headY};
 
@@ -388,13 +371,13 @@ function draw() {
     }
 
     snake.unshift(newHead);
+
+    if(musicPlaying && Math.random() < 0.3) playNote();
 }
 
 function gameOver() {
     playGameOverSound();
     clearInterval(game);
-    musicPlaying = false;
-    document.getElementById('musicBtn').textContent = '🔇 OFF';
     setTimeout(() => {
         alert('Game Over! Skor: ' + score);
         resetGame();
