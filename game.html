@@ -52,13 +52,13 @@ cat > game.html << 'EOF'
         justify-content: center;
         width: 100%;
     }
-  .dpad {
+ .dpad {
         display: grid;
         grid-template-columns: 60px 60px 60px;
         grid-template-rows: 60px 60px 60px;
         gap: 5px;
     }
-  .dpad button {
+ .dpad button {
         width: 60px;
         height: 60px;
         margin: 0;
@@ -70,13 +70,23 @@ cat > game.html << 'EOF'
         padding: 0;
         user-select: none;
     }
-  .dpad button:active { background: #00ff00; color: #000; }
+ .dpad button:active { background: #00ff00; color: #000; }
     #pauseBtn {
         background: #ffaa00;
         border-color: #ffaa00;
         color: #000;
         padding: 8px 15px;
         font-size: 18px;
+    }
+    #musicBtn {
+        background: #333;
+        border-color: #555;
+        color: #fff;
+        padding: 5px 10px;
+        font-size: 14px;
+        position: absolute;
+        top: 10px;
+        right: 10px;
     }
     #info {
         display: flex;
@@ -85,22 +95,24 @@ cat > game.html << 'EOF'
         margin: 5px 0;
         font-size: 16px;
     }
-  .level-btn {
+ .level-btn {
         border-color: #ffaa00;
         color: #ffaa00;
     }
-  .level-btn.active {
+ .level-btn.active {
         background: #ffaa00;
         color: #000;
     }
     @media (max-height: 700px) {
-    .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
-    .dpad button { width: 55px; height: 55px; font-size: 22px; }
+   .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
+   .dpad button { width: 55px; height: 55px; font-size: 22px; }
       canvas { max-height: 45vh; }
     }
 </style>
 </head>
 <body>
+<button id="musicBtn" onclick="toggleMusic()">🎵 ON</button>
+
 <div id="menu">
     <h2>Snake Game 🐍</h2>
     <p>Pilih Level:</p>
@@ -140,20 +152,49 @@ const cols = canvas.width / box;
 const rows = canvas.height / box;
 
 let snake, dir, foods, score, game, speed, level = 1, paused = false;
-let audioCtx, audioEnabled = false;
+let audioCtx, audioEnabled = false, musicPlaying = false, musicOsc = [];
 
-function selectLevel(lvl) {
-    level = lvl;
-    document.getElementById('lvl1btn').classList.remove('active');
-    document.getElementById('lvl2btn').classList.remove('active');
-    document.getElementById('lvl3btn').classList.remove('active');
-    document.getElementById('lvl' + lvl + 'btn').classList.add('active');
-}
+// Musik latar sederhana 8-bit
+const musicNotes = [262, 294, 330, 349, 392, 440, 494, 523]; // C4 to C5
+let noteIndex = 0;
 
 function enableAudio() {
     if(!audioEnabled) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         audioEnabled = true;
+    }
+}
+
+function playBackgroundMusic() {
+    if(!audioEnabled ||!musicPlaying) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.frequency.value = musicNotes[noteIndex];
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+
+    noteIndex = (noteIndex + 1) % musicNotes.length;
+
+    setTimeout(() => {
+        if(musicPlaying &&!paused) playBackgroundMusic();
+    }, 300);
+}
+
+function toggleMusic() {
+    enableAudio();
+    musicPlaying =!musicPlaying;
+    document.getElementById('musicBtn').textContent = musicPlaying? '🎵 ON' : '🔇 OFF';
+
+    if(musicPlaying &&!paused) {
+        noteIndex = 0;
+        playBackgroundMusic();
     }
 }
 
@@ -183,6 +224,14 @@ function playGameOverSound() {
     osc.stop(audioCtx.currentTime + 0.4);
 }
 
+function selectLevel(lvl) {
+    level = lvl;
+    document.getElementById('lvl1btn').classList.remove('active');
+    document.getElementById('lvl2btn').classList.remove('active');
+    document.getElementById('lvl3btn').classList.remove('active');
+    document.getElementById('lvl' + lvl + 'btn').classList.add('active');
+}
+
 function startGame(selectedSpeed) {
     enableAudio();
     speed = selectedSpeed;
@@ -202,10 +251,17 @@ function startGame(selectedSpeed) {
 
     if(game) clearInterval(game);
     game = setInterval(draw, speed);
+
+    if(musicPlaying) {
+        noteIndex = 0;
+        playBackgroundMusic();
+    }
 }
 
 function resetGame() {
     clearInterval(game);
+    musicPlaying = false;
+    document.getElementById('musicBtn').textContent = '🔇 OFF';
     document.getElementById('menu').style.display = 'block';
     document.getElementById('gameArea').style.display = 'none';
     document.getElementById('controls').style.display = 'none';
@@ -215,6 +271,13 @@ function resetGame() {
 function togglePause() {
     paused =!paused;
     document.getElementById('pauseBtn').textContent = paused? '▶' : '⏸';
+
+    if(paused && musicPlaying) {
+        musicPlaying = false;
+    } else if(!paused && document.getElementById('musicBtn').textContent === '🎵 ON') {
+        musicPlaying = true;
+        playBackgroundMusic();
+    }
 }
 
 function spawnFood() {
@@ -243,7 +306,6 @@ function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Gambar tembok untuk Level 2 & 3
     if(level >= 2) {
         ctx.fillStyle = '#333';
         ctx.fillRect(0, 0, canvas.width, box);
@@ -252,28 +314,27 @@ function draw() {
         ctx.fillRect(canvas.width - box, 0, box, canvas.height);
     }
 
-    // Gambar apel
-    ctx.font = '20px serif';
-    foods.forEach(f => ctx.fillText('🍎', f.x, f.y + 18));
+    foods.forEach(f => {
+        ctx.fillStyle = '#ff3333';
+        ctx.fillRect(f.x, f.y, box, box);
+        ctx.strokeStyle = '#ffaa00';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(f.x, f.y, box, box);
+    });
 
-    // Gambar ular
     snake.forEach((s, i) => {
         if(i === 0) {
             ctx.fillStyle = '#ffff00';
             ctx.fillRect(s.x, s.y, box, box);
-            ctx.strokeStyle = '#ffaa00';
+            ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
             ctx.strokeRect(s.x, s.y, box, box);
         } else {
             ctx.fillStyle = '#00ff00';
             ctx.fillRect(s.x, s.y, box, box);
-            ctx.strokeStyle = '#008800';
+            ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 1;
             ctx.strokeRect(s.x, s.y, box, box);
-            ctx.fillStyle = '#004400';
-            ctx.beginPath();
-            ctx.arc(s.x + box/2, s.y + box/2, 3, 0, Math.PI * 2);
-            ctx.fill();
         }
     });
 
@@ -285,7 +346,6 @@ function draw() {
     if(dir==='UP') headY -= box;
     if(dir==='DOWN') headY += box;
 
-    // Logic tembok
     if(level === 1) {
         if(headX < 0) headX = canvas.width - box;
         else if(headX >= canvas.width) headX = 0;
@@ -298,7 +358,6 @@ function draw() {
         }
     }
 
-    // Cek makan apel
     let ateFood = false;
     foods = foods.filter(f => {
         if(headX===f.x && headY===f.y) {
@@ -310,7 +369,6 @@ function draw() {
         return true;
     });
 
-    // Kalau apel habis, tambah lagi
     if(foods.length === 0) {
         foods.push(spawnFood());
         if(level === 3) foods.push(spawnFood());
@@ -322,7 +380,6 @@ function draw() {
 
     let newHead = {x: headX, y: headY};
 
-    // Cek tabrakan diri sendiri
     for(let i=0; i<snake.length; i++) {
         if(newHead.x===snake[i].x && newHead.y===snake[i].y) {
             gameOver();
@@ -336,6 +393,8 @@ function draw() {
 function gameOver() {
     playGameOverSound();
     clearInterval(game);
+    musicPlaying = false;
+    document.getElementById('musicBtn').textContent = '🔇 OFF';
     setTimeout(() => {
         alert('Game Over! Skor: ' + score);
         resetGame();
