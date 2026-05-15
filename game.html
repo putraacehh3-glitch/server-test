@@ -4,7 +4,7 @@ cat > game.html << 'EOF'
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Snake Game 2 Player 🐍</title>
+<title>Snake Game 🐍</title>
 <style>
     * { box-sizing: border-box; touch-action: manipulation; }
     body {
@@ -49,44 +49,34 @@ cat > game.html << 'EOF'
     #controls {
         margin-top: 8px;
         display: none;
-        justify-content: space-between;
-        align-items: center;
+        justify-content: center;
         width: 100%;
+    }
+   .dpad {
+        display: grid;
+        grid-template-columns: 60px 60px 60px;
+        grid-template-rows: 60px 60px 60px;
         gap: 5px;
     }
-  .dpad {
-        display: grid;
-        grid-template-columns: 55px 55px 55px;
-        grid-template-rows: 55px 55px 55px;
-        gap: 4px;
-    }
-  .dpad button {
-        width: 55px;
-        height: 55px;
+   .dpad button {
+        width: 60px;
+        height: 60px;
         margin: 0;
         background: #111;
+        border: 2px solid #00ff00;
+        color: #00ff00;
         font-size: 26px;
         border-radius: 12px;
         padding: 0;
         user-select: none;
     }
-    #p1pad button { border-color: #00ff00; color: #00ff00; }
-    #p1pad button:active { background: #00ff00; color: #000; }
-    #p2pad button { border-color: #ff00ff; color: #ff00ff; }
-    #p2pad button:active { background: #ff00ff; color: #000; }
-    #centerControls {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        align-items: center;
-    }
+   .dpad button:active { background: #00ff00; color: #000; }
     #pauseBtn {
         background: #ffaa00;
         border-color: #ffaa00;
         color: #000;
         padding: 8px 15px;
         font-size: 18px;
-        width: 70px;
     }
     #info {
         display: flex;
@@ -95,46 +85,47 @@ cat > game.html << 'EOF'
         margin: 5px 0;
         font-size: 16px;
     }
+   .level-btn {
+        border-color: #ffaa00;
+        color: #ffaa00;
+    }
+   .level-btn.active {
+        background: #ffaa00;
+        color: #000;
+    }
     @media (max-height: 700px) {
-      .dpad { grid-template-columns: 50px 50px 50px; grid-template-rows: 50px 50px 50px; }
-      .dpad button { width: 50px; height: 50px; font-size: 22px; }
-       canvas { max-height: 45vh; }
+     .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
+     .dpad button { width: 55px; height: 55px; font-size: 22px; }
+      canvas { max-height: 45vh; }
     }
 </style>
 </head>
 <body>
 <div id="menu">
-    <h2>Snake Game 2 Player 🐍</h2>
-    <p>Mode: Tembus Tembok ON</p>
-    <button onclick="startGame(1, 120)">1 Player</button>
-    <button onclick="startGame(2, 120)">2 Player</button>
+    <h2>Snake Game 🐍</h2>
+    <p>Pilih Level:</p>
+    <button class="level-btn active" id="lvl1btn" onclick="selectLevel(1)">Level 1 - Tembus Tembok</button>
+    <button class="level-btn" id="lvl2btn" onclick="selectLevel(2)">Level 2 - Ada Tembok</button>
+    <br>
+    <p>Pilih Kecepatan:</p>
+    <button onclick="startGame(180)">Santai</button>
+    <button onclick="startGame(120)">Normal</button>
+    <button onclick="startGame(80)">Cepat</button>
 </div>
 
 <div id="gameArea">
     <canvas id="game" width="360" height="640"></canvas>
     <div id="info">
-        <p id="score1">P1: 0</p>
-        <p id="score2" style="display:none;">P2: 0</p>
+        <p id="score">Skor: 0</p>
+        <p id="levelInfo">Level 1</p>
     </div>
     <div id="controls">
-        <div class="dpad" id="p1pad">
-            <div></div><button ontouchstart="setDir(1, 'UP')" onmousedown="setDir(1, 'UP')">▲</button><div></div>
-            <button ontouchstart="setDir(1, 'LEFT')" onmousedown="setDir(1, 'LEFT')">◄</button>
-            <div></div>
-            <button ontouchstart="setDir(1, 'RIGHT')" onmousedown="setDir(1, 'RIGHT')">►</button>
-            <div></div><button ontouchstart="setDir(1, 'DOWN')" onmousedown="setDir(1, 'DOWN')">▼</button><div></div>
-        </div>
-
-        <div id="centerControls">
-            <button id="pauseBtn" ontouchstart="togglePause()" onmousedown="togglePause()">⏸</button>
-        </div>
-
-        <div class="dpad" id="p2pad" style="display:none;">
-            <div></div><button ontouchstart="setDir(2, 'UP')" onmousedown="setDir(2, 'UP')">▲</button><div></div>
-            <button ontouchstart="setDir(2, 'LEFT')" onmousedown="setDir(2, 'LEFT')">◄</button>
-            <div></div>
-            <button ontouchstart="setDir(2, 'RIGHT')" onmousedown="setDir(2, 'RIGHT')">►</button>
-            <div></div><button ontouchstart="setDir(2, 'DOWN')" onmousedown="setDir(2, 'DOWN')">▼</button><div></div>
+        <div class="dpad">
+            <div></div><button ontouchstart="setDir('UP')" onmousedown="setDir('UP')">▲</button><div></div>
+            <button ontouchstart="setDir('LEFT')" onmousedown="setDir('LEFT')">◄</button>
+            <button ontouchstart="togglePause()" onmousedown="togglePause()" id="pauseBtn">⏸</button>
+            <button ontouchstart="setDir('RIGHT')" onmousedown="setDir('RIGHT')">►</button>
+            <div></div><button ontouchstart="setDir('DOWN')" onmousedown="setDir('DOWN')">▼</button><div></div>
         </div>
     </div>
     <button onclick="resetGame()">Menu</button>
@@ -147,8 +138,15 @@ const box = 20;
 const cols = canvas.width / box;
 const rows = canvas.height / box;
 
-let players = [], food, game, speed, mode, paused = false;
+let snake, dir, food, score, game, speed, level = 1, paused = false;
 let audioCtx, audioEnabled = false;
+
+function selectLevel(lvl) {
+    level = lvl;
+    document.getElementById('lvl1btn').classList.remove('active');
+    document.getElementById('lvl2btn').classList.remove('active');
+    document.getElementById('lvl' + lvl + 'btn').classList.add('active');
+}
 
 function enableAudio() {
     if(!audioEnabled) {
@@ -183,50 +181,20 @@ function playGameOverSound() {
     osc.stop(audioCtx.currentTime + 0.4);
 }
 
-function startGame(playerCount, selectedSpeed) {
+function startGame(selectedSpeed) {
     enableAudio();
-    mode = playerCount;
     speed = selectedSpeed;
     document.getElementById('menu').style.display = 'none';
     document.getElementById('gameArea').style.display = 'block';
     document.getElementById('controls').style.display = 'flex';
     canvas.style.display = 'block';
 
-    players = [];
-    if(mode === 1) {
-        players.push({
-            snake: [{x: Math.floor(cols/2)*box, y: Math.floor(rows/2)*box}],
-            dir: 'UP',
-            score: 0,
-            color: '#ffff00',
-            bodyColor: '#00ff00',
-            alive: true
-        });
-        document.getElementById('score2').style.display = 'none';
-        document.getElementById('p2pad').style.display = 'none';
-    } else {
-        players.push({
-            snake: [{x: 4*box, y: Math.floor(rows/2)*box}],
-            dir: 'RIGHT',
-            score: 0,
-            color: '#ffff00',
-            bodyColor: '#00ff00',
-            alive: true
-        });
-        players.push({
-            snake: [{x: (cols-5)*box, y: Math.floor(rows/2)*box}],
-            dir: 'LEFT',
-            score: 0,
-            color: '#ff00ff',
-            bodyColor: '#ff66ff',
-            alive: true
-        });
-        document.getElementById('score2').style.display = 'block';
-        document.getElementById('p2pad').style.display = 'grid';
-    }
-
+    snake = [{x: Math.floor(cols/2)*box, y: Math.floor(rows/2)*box}];
+    dir = 'UP';
     food = spawnFood();
-    updateScore();
+    score = 0;
+    document.getElementById('score').textContent = 'Skor: 0';
+    document.getElementById('levelInfo').textContent = level === 1? 'Level 1' : 'Level 2';
     paused = false;
     document.getElementById('pauseBtn').textContent = '⏸';
 
@@ -254,25 +222,16 @@ function spawnFood() {
             x: Math.floor(Math.random()*cols)*box,
             y: Math.floor(Math.random()*rows)*box
         };
-    } while(players.some(p => p.snake.some(s => s.x===f.x && s.y===f.y)));
+    } while(snake.some(s => s.x===f.x && s.y===f.y));
     return f;
 }
 
-function setDir(playerNum, newDir) {
+function setDir(newDir) {
     enableAudio();
-    let p = players[playerNum-1];
-    if(!p ||!p.alive) return;
-    if(newDir==='LEFT' && p.dir!=='RIGHT') p.dir=newDir;
-    if(newDir==='RIGHT' && p.dir!=='LEFT') p.dir=newDir;
-    if(newDir==='UP' && p.dir!=='DOWN') p.dir=newDir;
-    if(newDir==='DOWN' && p.dir!=='UP') p.dir=newDir;
-}
-
-function updateScore() {
-    document.getElementById('score1').textContent = 'P1: ' + players[0].score;
-    if(mode === 2) {
-        document.getElementById('score2').textContent = 'P2: ' + players[1].score;
-    }
+    if(newDir==='LEFT' && dir!=='RIGHT') dir=newDir;
+    if(newDir==='RIGHT' && dir!=='LEFT') dir=newDir;
+    if(newDir==='UP' && dir!=='DOWN') dir=newDir;
+    if(newDir==='DOWN' && dir!=='UP') dir=newDir;
 }
 
 function draw() {
@@ -281,83 +240,93 @@ function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Gambar tembok untuk Level 2
+    if(level === 2) {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(0, 0, canvas.width, box);
+        ctx.fillRect(0, canvas.height - box, canvas.width, box);
+        ctx.fillRect(0, 0, box, canvas.height);
+        ctx.fillRect(canvas.width - box, 0, box, canvas.height);
+    }
+
     ctx.font = '20px serif';
     ctx.fillText('🍎', food.x, food.y + 18);
 
-    players.forEach((p, idx) => {
-        if(!p.alive) return;
-
-        let head = {...p.snake[0]};
-        if(p.dir==='LEFT') head.x -= box;
-        if(p.dir==='RIGHT') head.x += box;
-        if(p.dir==='UP') head.y -= box;
-        if(p.dir==='DOWN') head.y += box;
-
-        if(head.x < 0) head.x = canvas.width - box;
-        else if(head.x >= canvas.width) head.x = 0;
-        if(head.y < 0) head.y = canvas.height - box;
-        else if(head.y >= canvas.height) head.y = 0;
-
-        if(head.x===food.x && head.y===food.y) {
-            p.score++;
-            playEatSound();
-            updateScore();
-            food = spawnFood();
+    // Gambar ular
+    snake.forEach((s, i) => {
+        if(i === 0) {
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(s.x, s.y, box, box);
+            ctx.strokeStyle = '#ffaa00';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(s.x, s.y, box, box);
         } else {
-            p.snake.pop();
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(s.x, s.y, box, box);
+            ctx.strokeStyle = '#008800';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(s.x, s.y, box, box);
+            ctx.fillStyle = '#004400';
+            ctx.beginPath();
+            ctx.arc(s.x + box/2, s.y + box/2, 3, 0, Math.PI * 2);
+            ctx.fill();
         }
-
-        for(let i=0; i<p.snake.length; i++) {
-            if(head.x===p.snake[i].x && head.y===p.snake[i].y) {
-                p.alive = false;
-                playGameOverSound();
-                break;
-            }
-        }
-        players.forEach((other, j) => {
-            if(idx!== j && other.alive) {
-                other.snake.forEach(s => {
-                    if(head.x===s.x && head.y===s.y) {
-                        p.alive = false;
-                        playGameOverSound();
-                    }
-                });
-            }
-        });
-
-        if(p.alive) {
-            p.snake.unshift(head);
-        }
-
-        p.snake.forEach((s, i) => {
-            if(i === 0) {
-                ctx.fillStyle = p.color;
-                ctx.fillRect(s.x, s.y, box, box);
-                ctx.strokeStyle = '#ffaa00';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(s.x, s.y, box, box);
-            } else {
-                ctx.fillStyle = p.bodyColor;
-                ctx.fillRect(s.x, s.y, box, box);
-                ctx.strokeStyle = '#008800';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(s.x, s.y, box, box);
-            }
-        });
     });
 
-    let aliveCount = players.filter(p => p.alive).length;
-    if(aliveCount === 0) {
-        playGameOverSound();
-        clearInterval(game);
-        setTimeout(() => {
-            alert(mode===1? `Game Over! Skor: ${players[0].score}` : `Game Over!\nP1: ${players[0].score}\nP2: ${players[1].score}`);
-            resetGame();
-        }, 300);
+    let headX = snake[0].x;
+    let headY = snake[0].y;
+
+    if(dir==='LEFT') headX -= box;
+    if(dir==='RIGHT') headX += box;
+    if(dir==='UP') headY -= box;
+    if(dir==='DOWN') headY += box;
+
+    // Logic tembok
+    if(level === 1) {
+        // Level 1: Tembus tembok
+        if(headX < 0) headX = canvas.width - box;
+        else if(headX >= canvas.width) headX = 0;
+        if(headY < 0) headY = canvas.height - box;
+        else if(headY >= canvas.height) headY = 0;
+    } else {
+        // Level 2: Nabrak tembok = game over
+        if(headX < box || headX >= canvas.width - box || headY < box || headY >= canvas.height - box) {
+            gameOver();
+            return;
+        }
     }
+
+    if(headX===food.x && headY===food.y) {
+        score++;
+        playEatSound();
+        document.getElementById('score').textContent = 'Skor: ' + score;
+        food = spawnFood();
+    } else {
+        snake.pop();
+    }
+
+    let newHead = {x: headX, y: headY};
+
+    // Cek tabrakan diri sendiri
+    for(let i=0; i<snake.length; i++) {
+        if(newHead.x===snake[i].x && newHead.y===snake[i].y) {
+            gameOver();
+            return;
+        }
+    }
+
+    snake.unshift(newHead);
+}
+
+function gameOver() {
+    playGameOverSound();
+    clearInterval(game);
+    setTimeout(() => {
+        alert('Game Over! Skor: ' + score);
+        resetGame();
+    }, 300);
 }
 </script>
 </body>
 </html>
 EOF
-
