@@ -52,13 +52,13 @@ cat > game.html << 'EOF'
         justify-content: center;
         width: 100%;
     }
-   .dpad {
+  .dpad {
         display: grid;
         grid-template-columns: 60px 60px 60px;
         grid-template-rows: 60px 60px 60px;
         gap: 5px;
     }
-   .dpad button {
+  .dpad button {
         width: 60px;
         height: 60px;
         margin: 0;
@@ -70,7 +70,7 @@ cat > game.html << 'EOF'
         padding: 0;
         user-select: none;
     }
-   .dpad button:active { background: #00ff00; color: #000; }
+  .dpad button:active { background: #00ff00; color: #000; }
     #pauseBtn {
         background: #ffaa00;
         border-color: #ffaa00;
@@ -85,17 +85,17 @@ cat > game.html << 'EOF'
         margin: 5px 0;
         font-size: 16px;
     }
-   .level-btn {
+  .level-btn {
         border-color: #ffaa00;
         color: #ffaa00;
     }
-   .level-btn.active {
+  .level-btn.active {
         background: #ffaa00;
         color: #000;
     }
     @media (max-height: 700px) {
-     .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
-     .dpad button { width: 55px; height: 55px; font-size: 22px; }
+    .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
+    .dpad button { width: 55px; height: 55px; font-size: 22px; }
       canvas { max-height: 45vh; }
     }
 </style>
@@ -106,6 +106,7 @@ cat > game.html << 'EOF'
     <p>Pilih Level:</p>
     <button class="level-btn active" id="lvl1btn" onclick="selectLevel(1)">Level 1 - Tembus Tembok</button>
     <button class="level-btn" id="lvl2btn" onclick="selectLevel(2)">Level 2 - Ada Tembok</button>
+    <button class="level-btn" id="lvl3btn" onclick="selectLevel(3)">Level 3 - 2 Apel</button>
     <br>
     <p>Pilih Kecepatan:</p>
     <button onclick="startGame(180)">Santai</button>
@@ -138,13 +139,14 @@ const box = 20;
 const cols = canvas.width / box;
 const rows = canvas.height / box;
 
-let snake, dir, food, score, game, speed, level = 1, paused = false;
+let snake, dir, foods, score, game, speed, level = 1, paused = false;
 let audioCtx, audioEnabled = false;
 
 function selectLevel(lvl) {
     level = lvl;
     document.getElementById('lvl1btn').classList.remove('active');
     document.getElementById('lvl2btn').classList.remove('active');
+    document.getElementById('lvl3btn').classList.remove('active');
     document.getElementById('lvl' + lvl + 'btn').classList.add('active');
 }
 
@@ -191,10 +193,10 @@ function startGame(selectedSpeed) {
 
     snake = [{x: Math.floor(cols/2)*box, y: Math.floor(rows/2)*box}];
     dir = 'UP';
-    food = spawnFood();
+    foods = level === 3? [spawnFood(), spawnFood()] : [spawnFood()];
     score = 0;
     document.getElementById('score').textContent = 'Skor: 0';
-    document.getElementById('levelInfo').textContent = level === 1? 'Level 1' : 'Level 2';
+    document.getElementById('levelInfo').textContent = 'Level ' + level;
     paused = false;
     document.getElementById('pauseBtn').textContent = '⏸';
 
@@ -222,7 +224,8 @@ function spawnFood() {
             x: Math.floor(Math.random()*cols)*box,
             y: Math.floor(Math.random()*rows)*box
         };
-    } while(snake.some(s => s.x===f.x && s.y===f.y));
+    } while(snake.some(s => s.x===f.x && s.y===f.y) ||
+            foods.some(f2 => f2.x===f.x && f2.y===f.y));
     return f;
 }
 
@@ -240,8 +243,8 @@ function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Gambar tembok untuk Level 2
-    if(level === 2) {
+    // Gambar tembok untuk Level 2 & 3
+    if(level >= 2) {
         ctx.fillStyle = '#333';
         ctx.fillRect(0, 0, canvas.width, box);
         ctx.fillRect(0, canvas.height - box, canvas.width, box);
@@ -249,8 +252,9 @@ function draw() {
         ctx.fillRect(canvas.width - box, 0, box, canvas.height);
     }
 
+    // Gambar apel
     ctx.font = '20px serif';
-    ctx.fillText('🍎', food.x, food.y + 18);
+    foods.forEach(f => ctx.fillText('🍎', f.x, f.y + 18));
 
     // Gambar ular
     snake.forEach((s, i) => {
@@ -283,27 +287,38 @@ function draw() {
 
     // Logic tembok
     if(level === 1) {
-        // Level 1: Tembus tembok
         if(headX < 0) headX = canvas.width - box;
         else if(headX >= canvas.width) headX = 0;
         if(headY < 0) headY = canvas.height - box;
         else if(headY >= canvas.height) headY = 0;
     } else {
-        // Level 2: Nabrak tembok = game over
         if(headX < box || headX >= canvas.width - box || headY < box || headY >= canvas.height - box) {
             gameOver();
             return;
         }
     }
 
-    if(headX===food.x && headY===food.y) {
-        score++;
-        playEatSound();
-        document.getElementById('score').textContent = 'Skor: ' + score;
-        food = spawnFood();
-    } else {
-        snake.pop();
+    // Cek makan apel
+    let ateFood = false;
+    foods = foods.filter(f => {
+        if(headX===f.x && headY===f.y) {
+            score++;
+            playEatSound();
+            ateFood = true;
+            return false;
+        }
+        return true;
+    });
+
+    // Kalau apel habis, tambah lagi
+    if(foods.length === 0) {
+        foods.push(spawnFood());
+        if(level === 3) foods.push(spawnFood());
     }
+
+    document.getElementById('score').textContent = 'Skor: ' + score;
+
+    if(!ateFood) snake.pop();
 
     let newHead = {x: headX, y: headY};
 
